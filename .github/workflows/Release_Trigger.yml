@@ -1,0 +1,29 @@
+name: Trigger Workflow on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          # Make sure the release step uses its own credentials:
+          # https://github.com/cycjimmy/semantic-release-action#private-packages
+          persist-credentials: false
+          fetch-depth: 0
+        
+      - name: Trigger Build & Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_REPO: xvasonix/docker-py-revanced # 대상 repository의 소유자와 저장소 이름
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/$TARGET_REPO/actions/workflows/Build & Release/dispatches \
+            -d '{"ref": "main"}'
